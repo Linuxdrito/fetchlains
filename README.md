@@ -5,7 +5,8 @@
 The original zsh script worked fine, but I wanted to eliminate shell overhead and take advantage of the fact that `fastfetch` and GIF selection can run in parallel..
 
 
-<img width="330" height="400" alt="lain10" src="https://github.com/user-attachments/assets/72a2b08c-8a43-4a29-adab-cef65cdfd683" /> <img width="330" height="400" alt="lain1" src="https://github.com/user-attachments/assets/712ae26b-090b-4d03-acb2-0d0a346b5988" />
+<img width="330" height="400" alt="lain10" src="https://github.com/user-attachments/assets/72a2b08c-8a43-4a29-adab-cef65cdfd683" /> <img width="330" height="400" alt="lain1" src="https://github.com/user-attachments/assets/712ae26b-090b-4d03-acb2-0d0a346b5988" /> <img width="330" height="400" alt="lain9" src="https://github.com/user-attachments/assets/ba0a2312-5e85-40c5-bd70-5476e0f1fd6b" />
+
 
 
 
