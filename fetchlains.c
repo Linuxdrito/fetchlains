@@ -55,15 +55,31 @@ static void xwrite(int fd, const char *s, size_t n)
     }
 }
 
+static const char *detect_protocol(void)
+{
+    if (getenv("KITTY_WINDOW_ID")) return "kitty";
+
+    const char *term = getenv("TERM");
+    if (term) {
+        if (strcmp(term, "xterm-kitty") == 0)               return "kitty";
+        if (strcmp(term, "foot") == 0 ||
+            strcmp(term, "foot-extra") == 0)                 return "sixel";
+    }
+
+    const char *term_program = getenv("TERM_PROGRAM");
+    if (term_program && strcmp(term_program, "WezTerm") == 0) return "kitty";
+
+    return "kitty";
+}
+
+
 int main(void)
 {
-    /* ── 0. Paths ─────────────────────────────────────────────────────── */
     char gif_dir[MAX_PATH], margin_txt[MAX_PATH], gif_index[MAX_PATH];
     expand_home("~/Descargas/gifs", gif_dir,    sizeof(gif_dir));
     expand_home("~/margin.txt",     margin_txt, sizeof(margin_txt));
     expand_home("~/.gif-index",     gif_index,  sizeof(gif_index));
 
-    /* ── 1. Fork fastfetch inmediatamente → tmpfile ───────────────────── */
     pid_t ff_pid = fork();
     if (ff_pid < 0) die("fork");
 
@@ -77,7 +93,6 @@ int main(void)
         die("execlp fastfetch");
     }
 
-    /* ── 2. Mientras fastfetch corre: leer índice y elegir GIF ───────── */
     GifEntry gifs[MAX_GIFS];
     int gif_count = 0;
 
@@ -99,7 +114,7 @@ int main(void)
     fclose(idx);
 
     if (gif_count == 0) {
-        fputs("gif-index vacío o mal formateado\n", stderr);
+        fputs("gif-index empty or malformed\n", stderr);
         exit(1);
     }
 
@@ -112,16 +127,15 @@ int main(void)
     char geom[32];
     snprintf(geom, sizeof(geom), "%dx%d", sel->w, sel->h);
 
-    /* ── 3. Esperar fastfetch, clear, volcar output ───────────────────── */
+    const char *proto = detect_protocol();
+
     waitpid(ff_pid, NULL, 0);
     xwrite(STDOUT_FILENO, "\033[2J\033[H", 7);
     dump_and_remove(TMPFILE);
 
-    /* ── 4. Posicionar cursor ─────────────────────────────────────────── */
     xwrite(STDOUT_FILENO, "\033[H\033[2B", 7);
 
-    /* ── 5. Reemplazar proceso con timg (loops 0 = infinito) ─────────── */
     execlp("timg", "timg",
-           "-p", "sixel", "--loops", "0", "-g", geom, gif_path, (char *)NULL);
+           "-p", proto, "--loops", "0", "-g", geom, gif_path, (char *)NULL);
     die("execlp timg");
 }

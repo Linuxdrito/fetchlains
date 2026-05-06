@@ -1,4 +1,4 @@
-# fetch
+# fetchlains
 
 > fastfetch + lain gifs for my Hyprland setup.
 
@@ -14,18 +14,19 @@ The original zsh script worked fine, but I wanted to eliminate shell overhead an
 
 ## What it does
 
-1. **Immediate hehe** — launches `fastfetch` in the background, redirecting its output to a tmpfile, without waiting.
+1. **Immediate fork** — launches `fastfetch` in the background, redirecting its output to a tmpfile, without waiting.
 2. **In parallel** — reads `~/.gif-index` and picks a random GIF with its precomputed dimensions.
 3. **Sync** — waits for `fastfetch`, clears the screen, dumps the output.
-4. **`execlp` timg** — replaces the process itself with `timg` (no extra fork, no zombie process). Animated GIF with `--loops 0`.
+4. **Terminal detection** — checks `$KITTY_WINDOW_ID`, `$TERM`, `$TERM_PROGRAM` and picks `kitty` or `sixel` protocol. Defaults to `kitty` (GPU accelerated).
+5. **`execlp` timg** — replaces the process itself with `timg` (no extra fork, no zombie process). Animated GIF with `--loops 0`. Press `q` to quit and free resources.
 
 ---
 
 ## Files
 
 ```
-fetch.c        — source
-fetch.sh       — original zsh script (reference)
+fetchlains.c        — source
+fetchlains.sh       — original zsh script (reference)
 gif-index      — GIF index with precomputed dimensions → copy to ~/.gif-index
 margin.txt     — fastfetch logo → copy to ~/margin.txt
 
@@ -54,10 +55,10 @@ cp gif-index ~/.gif-index
 cp margin.txt ~/margin.txt
 
 # 4. Compile
-gcc -O2 -march=native -flto -pipe -s -o fetch fetch.c
+gcc -O2 -march=native -flto -pipe -s -o fetchlains fetchlains.c
 
 # 5. Install
-sudo mv fetch /usr/local/bin/fetch
+sudo mv fetchlains /usr/local/bin/fetchlains
 ```
 
 ---
@@ -86,17 +87,18 @@ GIFs live in `~/Descargas/gifs/`. To add a new one just append a line to the ind
 In `hyprland.conf`:
 
 ```ini
-bind = $mainMod, H, exec, footclient fetch
+bind = $mainMod, H, exec, footclient fetchlains
 ```
 
 ---
 
 ## Why not the zsh script
 
-| | `fetch.sh` | `fetch` (C) |
+| | `fetchlains.sh` | `fetchlains` (C) |
 |---|---|---|
 | Startup overhead | ~15ms (zsh) | ~1ms |
 | fastfetch + GIF selection | Sequential | **Parallel** |
 | Launching timg | fork + exec | `execlp` (replaces the process) |
 | GIF dimensions | `case` at runtime | Read from index |
-
+| Terminal protocol | `sixel` hardcoded | Auto-detected (`kitty`/`sixel`) |
+| Quit | Ctrl+C | `q` |
